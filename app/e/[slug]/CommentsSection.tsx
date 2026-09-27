@@ -150,7 +150,7 @@ export function CommentsSection({
             value={text}
             onChange={(e) => setText(e.target.value.slice(0, MAX_LENGTH))}
             placeholder="Kommentieren …"
-            className="w-full rounded-full border border-neutral-200 px-4 py-2 text-sm shadow-sm focus:outline-none focus:ring-2"
+            className="w-full rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm text-neutral-900 shadow-sm focus:outline-none focus:ring-2"
             style={{ '--tw-ring-color': 'var(--event-button)' } as React.CSSProperties}
           />
         </div>

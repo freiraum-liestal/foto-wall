@@ -48,7 +48,7 @@ export function GuestOnboardingForm({
         maxLength={50}
         required
         autoFocus
-        className="rounded-xl border border-neutral-200 px-4 py-3 text-sm shadow-sm focus:outline-none focus:ring-2"
+        className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 shadow-sm focus:outline-none focus:ring-2"
         style={{ '--tw-ring-color': 'var(--event-button)' } as React.CSSProperties}
         placeholder="Dein Name"
       />

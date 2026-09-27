@@ -19,8 +19,6 @@ export function AdminNav({ eventSlug }: { eventSlug: string }) {
       <TabBar
         layoutId="admin-active-tab"
         activeKey={activeKey}
-        activeColor="var(--event-primary, #171717)"
-        inactiveColor="#a3a3a3"
         items={[
           { key: 'moderation', label: 'Moderation', icon: ShieldCheck, href: base },
           { key: 'settings', label: 'Einstellungen', icon: Settings, href: `${base}/settings` },
