@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Images, X, Send, Loader2, Video as VideoIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { optimizeImage } from '@/lib/media/optimize';
-import { uploadEventMedia } from '@/lib/media/upload';
+import { uploadEventMediaWithProgress } from '@/lib/media/upload';
 import { isVideoFile, validateAndInspectVideo } from '@/lib/media/video';
 import { createPost } from '@/lib/posts/api';
 import { MEDIA_CONFIG } from '@/lib/config';
@@ -35,6 +35,7 @@ export function UploadForm({
   const [validating, setValidating] = useState(false);
   const [text, setText] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0] ?? null;
@@ -84,6 +85,7 @@ export function UploadForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setUploading(true);
+    setUploadProgress(0);
     try {
       let storagePath: string | null = null;
       let mediaType: 'photo' | 'video' | null = null;
@@ -91,12 +93,22 @@ export function UploadForm({
       if (file) {
         if (isVideo) {
           // Keine Kompression für Videos – Originaldatei hochladen
-          storagePath = await uploadEventMedia(eventId, guestId, file);
+          storagePath = await uploadEventMediaWithProgress(
+            eventId,
+            guestId,
+            file,
+            setUploadProgress
+          );
           mediaType = 'video';
         } else {
           // Clientseitige Bildoptimierung via Canvas
           const optimized = await optimizeImage(file);
-          storagePath = await uploadEventMedia(eventId, guestId, optimized);
+          storagePath = await uploadEventMediaWithProgress(
+            eventId,
+            guestId,
+            optimized,
+            setUploadProgress
+          );
           mediaType = 'photo';
         }
       }
@@ -119,6 +131,7 @@ export function UploadForm({
       toast.error(getErrorMessage(err, 'Beitrag konnte nicht gesendet werden.'));
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   }
 
@@ -231,18 +244,27 @@ export function UploadForm({
         type="submit"
         disabled={uploading || validating}
         whileTap={{ scale: 0.98 }}
-        className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
+        className="relative flex items-center justify-center gap-2 overflow-hidden rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-50"
         style={{ backgroundColor: 'var(--event-button)' }}
       >
-        {uploading ? (
-          <>
-            <Loader2 size={16} className="animate-spin" /> Sende …
-          </>
-        ) : (
-          <>
-            <Send size={16} /> Beitrag absenden
-          </>
+        {uploading && uploadProgress !== null && (
+          <div
+            className="absolute inset-y-0 left-0 bg-black/15 transition-[width] duration-200 ease-out"
+            style={{ width: `${uploadProgress}%` }}
+          />
         )}
+        <span className="relative flex items-center gap-2">
+          {uploading ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              {uploadProgress !== null ? `Sende … ${uploadProgress}%` : 'Sende …'}
+            </>
+          ) : (
+            <>
+              <Send size={16} /> Beitrag absenden
+            </>
+          )}
+        </span>
       </motion.button>
     </form>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Play, Volume2, VolumeX, Video as VideoIcon } from 'lucide-react';
 import type { MediaType } from '@/lib/supabase/types';
 
@@ -48,6 +48,26 @@ export function MediaThumb({
   const [isMuted, setIsMuted] = useState(true);
   const [isPlaying, setIsPlaying] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const beamerVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Browser prüfen bei der Autoplay-Erlaubnis die tatsächliche `muted`-
+  // DOM-Property, nicht nur das JSX-Attribut. Je nach Hydration-Timing
+  // in Next.js können die auseinanderfallen, sodass Autoplay lautlos
+  // fehlschlägt (kein Fehler, kein Log - es passiert einfach nichts).
+  // Deshalb hier explizit erzwingen statt nur auf autoPlay/muted im
+  // JSX zu vertrauen.
+  useEffect(() => {
+    if (mode !== 'beamer-rotation' && mode !== 'beamer-grid-featured') return;
+    const el = beamerVideoRef.current;
+    if (!el) return;
+    el.muted = true;
+    const playPromise = el.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        console.warn('Beamer-Video-Autoplay fehlgeschlagen:', err);
+      });
+    }
+  }, [mode, url]);
 
   if (!hasMedia) return null;
 
@@ -140,6 +160,7 @@ export function MediaThumb({
   if (mode === 'beamer-rotation') {
     return (
       <video
+        ref={beamerVideoRef}
         src={url}
         autoPlay
         muted
@@ -155,6 +176,7 @@ export function MediaThumb({
   if (mode === 'beamer-grid-featured') {
     return (
       <video
+        ref={beamerVideoRef}
         src={url}
         autoPlay
         muted
